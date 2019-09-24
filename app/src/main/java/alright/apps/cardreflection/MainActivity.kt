@@ -14,8 +14,8 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.Shader
 import android.graphics.LinearGradient
 import android.graphics.Bitmap
-
-
+import android.util.Log
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
@@ -26,37 +26,44 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        //val resultBmp = BlurBuilder.blur(this, originalImage.getBitmap())//BitmapFactory.decodeResource(resources, R.drawable.icecream))
-
+        Log.d("Main", "Beginning transform....")
+        val startTime = System.currentTimeMillis()
+        //First we take the bitmap and round the corners of it, so it looks tasty
         val drawable = RoundedBitmapDrawableFactory.create(resources, BitmapFactory.decodeResource(resources, R.drawable.icecream))
         drawable.cornerRadius = 24.px.toFloat()
         originalImage.setImageDrawable(drawable)
 
+        //Next we grab a copy and rotate it
         val bitmap = originalImage.getBitmap()
         val m = Matrix()
-        m.postScale(1f, -1f, bitmap.width/2f, bitmap.height/2f)
+        m.preScale(1f, -1f)
         val mirrorBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, false)
 
-        //resultImage.setImageBitmap(bitmap)
-
+        //For an efficiency attempt, we chop some this bitmap down
         val pixels = IntArray(mirrorBitmap.width * MIRROR_HEIGHT)
         mirrorBitmap.getPixels(pixels, 0, mirrorBitmap.width, 0, 0, mirrorBitmap.width, MIRROR_HEIGHT)
 
-        val bitmapRow = Bitmap.createBitmap(mirrorBitmap.width, MIRROR_HEIGHT, Bitmap.Config.ARGB_8888)
+        val croppedBitmap = Bitmap.createBitmap(mirrorBitmap.width, MIRROR_HEIGHT, Bitmap.Config.ARGB_8888)
 
-        for (i in 0 until pixels.size) {
+        //For some reason, the cropped pixels need to be swizzled:
+        //https://stackoverflow.com/questions/47970384/why-is-copypixelsfrombuffer-giving-incorrect-color-setpixels-is-correct-but-slo
+        for (i in pixels.indices) {
             val red = Color.red(pixels[i])
             val green = Color.green(pixels[i])
             val blue = Color.blue(pixels[i])
             val alpha = Color.alpha(pixels[i])
             pixels[i] = Color.argb(alpha, blue, green, red)
         }
-        bitmapRow.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
+        croppedBitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
 
-        val finalBlurredImage = BlurBuilder.blur(this, bitmapRow)
+        //Blur the cropped, mirrored bitmap
+        val blurredBitmap = BlurBuilder.blur(this, croppedBitmap)
 
-        val gradientized = addGradient(finalBlurredImage)
-        resultImage.setImageBitmap(gradientized)
+        //Add a transparency gradient to the blurred image
+        val gradientizedBitmap = addGradient(blurredBitmap)
+        resultImage.setImageBitmap(gradientizedBitmap)
+
+        Log.d("Main", "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
     }
 
     fun View.getBitmap(): Bitmap {
