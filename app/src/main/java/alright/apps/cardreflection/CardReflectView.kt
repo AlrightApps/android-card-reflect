@@ -64,6 +64,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         croppedBitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
 
         //Blur the cropped, mirrored bitmap
+        //https://medium.com/@ssaurel/create-a-blur-effect-on-android-with-renderscript-aa05dae0bd7d
         val blurredBitmap = BlurBuilder.blur(context, croppedBitmap)
 
         //Add a transparency gradient to the blurred image
