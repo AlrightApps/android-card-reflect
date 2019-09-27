@@ -3,78 +3,118 @@ package alright.apps.cardreflection
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.*
+import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
 import android.widget.LinearLayout
+import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import kotlinx.android.synthetic.main.card_reflect_view.view.*
 import java.nio.IntBuffer
 
 class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs) {
 
+    var imageResource: Int = 0
+    var image: Bitmap? = null
+    var mirrorHeight: Int = 0
+
     init {
         inflate(context, R.layout.card_reflect_view, this)
 
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.CardReflectView)
-        val mirrorHeight = attributes.getDimension(R.styleable.CardReflectView_mirror_height, 0F).toInt()
-        val image = attributes.getResourceId(R.styleable.CardReflectView_image, 0)
+        mirrorHeight = attributes.getDimension(R.styleable.CardReflectView_mirror_height, 0F).toInt().px
+        imageResource = attributes.getResourceId(R.styleable.CardReflectView_image, 0)
         attributes.recycle()
+    }
 
-        Log.d("Main", "Beginning transform....")
-        val startTime = System.currentTimeMillis()
-        //First we take the bitmap and round the corners of it, so it looks tasty
-        val drawable = RoundedBitmapDrawableFactory.create(
-            resources,
-            BitmapFactory.decodeResource(resources, image)
-        )
-        drawable.cornerRadius = 24.px.toFloat()
-        originalImage.setImageDrawable(drawable)
+    private fun getRoundedBitmapDrawable(context: Context, bitmap: Bitmap): RoundedBitmapDrawable {
+        val size = Math.min(bitmap.width, bitmap.height)
+        val centerCropBitmap = ThumbnailUtils.extractThumbnail(bitmap, size, size)
+        val roundedBitmapDrawable = RoundedBitmapDrawableFactory.create(context.resources, centerCropBitmap)
+        roundedBitmapDrawable.isFilterBitmap = true
+        roundedBitmapDrawable.setAntiAlias(true)
+        roundedBitmapDrawable.cornerRadius = 24.px.toFloat()
+        return roundedBitmapDrawable
+    }
 
-        //Next we grab a copy and rotate it
-        val bitmap = originalImage.getBitmap()
-        val m = Matrix()
-        m.preScale(1f, -1f)
-        val mirrorBitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, false)
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if(imageResource != 0 || image != null) {
 
-        //For an efficiency attempt, we chop some this bitmap down
-        val pixels = IntArray(mirrorBitmap.width * mirrorHeight)
-        mirrorBitmap.getPixels(
-            pixels,
-            0,
-            mirrorBitmap.width,
-            0,
-            0,
-            mirrorBitmap.width,
-            mirrorHeight
-        )
+            Log.d("Main", "Beginning transform....")
+            val startTime = System.currentTimeMillis()
+            //First we take the bitmap and round the corners of it, so it looks tasty. We use this function to center crop the image
+            //https://stackoverflow.com/a/51702442/1866373
+            val drawable: RoundedBitmapDrawable = if (image != null) {
+                getRoundedBitmapDrawable(context, image!!)
+            } else{
+                getRoundedBitmapDrawable(context, BitmapFactory.decodeResource(resources, imageResource) )
+            }
 
-        val croppedBitmap =
-            Bitmap.createBitmap(mirrorBitmap.width, mirrorHeight, Bitmap.Config.ARGB_8888)
+            originalImage.setImageDrawable(drawable)
 
-        //For some reason, the cropped pixels need to be swizzled:
-        //https://stackoverflow.com/questions/47970384/why-is-copypixelsfrombuffer-giving-incorrect-color-setpixels-is-correct-but-slo
-        for (i in pixels.indices) {
-            val red = Color.red(pixels[i])
-            val green = Color.green(pixels[i])
-            val blue = Color.blue(pixels[i])
-            val alpha = Color.alpha(pixels[i])
-            pixels[i] = Color.argb(alpha, blue, green, red)
+            //Next we grab a copy and rotate it
+            val bitmap = originalImage.getBitmap()
+            val m = Matrix()
+            m.preScale(1f, -1f)
+            val mirrorBitmap =
+                Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, m, false)
+
+            //For an efficiency attempt, we chop some this bitmap down
+            val pixels = IntArray(mirrorBitmap.width * mirrorHeight)
+            mirrorBitmap.getPixels(
+                pixels,
+                0,
+                mirrorBitmap.width,
+                0,
+                0,
+                mirrorBitmap.width,
+                mirrorHeight
+            )
+
+            val croppedBitmap =
+                Bitmap.createBitmap(mirrorBitmap.width, mirrorHeight, Bitmap.Config.ARGB_8888)
+
+            //For some reason, the cropped pixels need to be swizzled:
+            //https://stackoverflow.com/questions/47970384/why-is-copypixelsfrombuffer-giving-incorrect-color-setpixels-is-correct-but-slo
+            for (i in pixels.indices) {
+                val red = Color.red(pixels[i])
+                val green = Color.green(pixels[i])
+                val blue = Color.blue(pixels[i])
+                val alpha = Color.alpha(pixels[i])
+                pixels[i] = Color.argb(alpha, blue, green, red)
+            }
+            croppedBitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
+
+            //Blur the cropped, mirrored bitmap
+            //https://medium.com/@ssaurel/create-a-blur-effect-on-android-with-renderscript-aa05dae0bd7d
+            val blurredBitmap = BlurBuilder.blur(context, croppedBitmap)
+
+            //Add a transparency gradient to the blurred image
+            val gradientizedBitmap = addGradient(blurredBitmap)
+            resultImage.setImageBitmap(gradientizedBitmap)
+
+            Log.d(
+                "Main",
+                "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!"
+            )
         }
-        croppedBitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
 
-        //Blur the cropped, mirrored bitmap
-        //https://medium.com/@ssaurel/create-a-blur-effect-on-android-with-renderscript-aa05dae0bd7d
-        val blurredBitmap = BlurBuilder.blur(context, croppedBitmap)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
-        //Add a transparency gradient to the blurred image
-        val gradientizedBitmap = addGradient(blurredBitmap)
-        resultImage.setImageBitmap(gradientizedBitmap)
+    }
 
-        Log.d(
-            "Main",
-            "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!"
-        )
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+    }
+
+    fun setCardImage(newImage: Bitmap){
+        image = newImage
+        requestLayout()
+    }
+    fun setCardImage(newImageResource: Int){
+        imageResource = newImageResource
+        requestLayout()
     }
 
     fun View.getBitmap(): Bitmap {

@@ -22,33 +22,6 @@
 
 package alright.apps.cardreflection
 
-import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
-import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
-import java.util.ArrayList
+import java.io.Serializable
 
-
-class MainActivity : AppCompatActivity() {
-
-    private var photosList: ArrayList<Photo> = ArrayList()
-    private lateinit var linearLayoutManager: LinearLayoutManager
-    private lateinit var adapter: RecyclerAdapter
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        recycler_view.layoutManager = linearLayoutManager
-
-        photosList.addAll(listOf(Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo()))
-        adapter = RecyclerAdapter(photosList)
-        recycler_view.adapter = adapter
-    }
-
-}
+class Photo() : Serializable {}

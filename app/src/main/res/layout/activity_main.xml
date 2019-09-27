@@ -4,7 +4,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/darker_gray"
+        android:background="@android:color/white"
         android:orientation="vertical"
         android:paddingTop="24dp">
 
@@ -13,17 +13,10 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-        <alright.apps.cardreflection.CardReflectView
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:image="@drawable/icecream"
-                card_view:mirror_height="96dp" />
-
-        <alright.apps.cardreflection.CardReflectView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                card_view:image="@drawable/icecream2"
-                card_view:mirror_height="96dp" />
+                android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
