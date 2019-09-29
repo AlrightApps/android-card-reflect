@@ -14,6 +14,6 @@
             android:id="@+id/resultImage"
             android:layout_width="256dp"
             android:layout_height="96dp"
-            android:scaleType="fitStart" />
+            android:scaleType="fitXY" />
 
 </LinearLayout>
