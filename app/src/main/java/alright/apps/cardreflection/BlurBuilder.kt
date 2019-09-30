@@ -11,7 +11,7 @@ import kotlin.math.roundToInt
 
 
 object BlurBuilder {
-    private const val BITMAP_SCALE = 0.4f
+    private const val BITMAP_SCALE = 1f
     private const val BLUR_RADIUS = 25f
 
     fun blur(context: Context, image: Bitmap): Bitmap {
