@@ -10,6 +10,7 @@ import android.view.View
 import android.widget.LinearLayout
 import androidx.core.graphics.drawable.RoundedBitmapDrawable
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
+import androidx.core.view.drawToBitmap
 import kotlinx.android.synthetic.main.card_reflect_view.view.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.GlobalScope
@@ -41,6 +42,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
             withContext(Dispatchers.Default) {
 
                 Log.d(tag, "Beginning transform....")
+                val startTime = System.currentTimeMillis()
                 imageResource = newImageResource
 
                 //First we take the bitmap and round the corners of it, so it looks tasty. We use this function to center crop the image
@@ -50,23 +52,21 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
                     BitmapFactory.decodeResource(resources, imageResource)
                 )
 
-                val startTime = System.currentTimeMillis()
-
-                //withContext(Dispatchers.Main) {
+                withContext(Dispatchers.Main) {
                     originalImage.setImageDrawable(roundedDrawable)
-                //}
+                }
+                val roundedBitmap = originalImage.drawToBitmap()
 
                 //Next we grab a copy and rotate it
-                val bitmap = originalImage.getBitmap()
                 val m = Matrix()
                 m.preScale(1f, -1f)
                 val mirrorBitmap =
                     Bitmap.createBitmap(
-                        bitmap,
+                        roundedBitmap,
                         0,
                         0,
-                        bitmap.width,
-                        bitmap.height,
+                        roundedBitmap.width,
+                        roundedBitmap.height,
                         m,
                         false
                     )
@@ -106,9 +106,14 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
 
                 //Add a transparency gradient to the blurred image
                 finalBitmap = addGradient(blurredBitmap)
-                //withContext(Dispatchers.Main) {
+
+                withContext(Dispatchers.Main) {
                     resultImage.setImageBitmap(finalBitmap)
-                //}
+
+                    //Request layout to draw these results to the screen
+                    Log.d(tag, "Requesting layout....")
+                    requestLayout()
+                }
 
                 Log.d(
                     tag,
@@ -116,9 +121,6 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
                 )
             }
 
-            //Request layout to draw these results to the screen
-            Log.d(tag, "Requesting layout....")
-            requestLayout()
         }
     }
 
@@ -131,16 +133,6 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         roundedBitmapDrawable.setAntiAlias(true)
         roundedBitmapDrawable.cornerRadius = 24.px.toFloat()
         return roundedBitmapDrawable
-    }
-
-    private fun View.getBitmap(): Bitmap {
-        val specWidth = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED)
-        measure(specWidth, specWidth)
-        val b = Bitmap.createBitmap(measuredWidth, measuredHeight, Bitmap.Config.ARGB_8888)
-        val c = Canvas(b)
-        layout(0, 0, measuredWidth, measuredHeight)
-        draw(c)
-        return b
     }
 
     val Int.dp: Int
