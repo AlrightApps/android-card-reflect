@@ -2,7 +2,8 @@
 <resources>
 
     <declare-styleable name="CardReflectView">
-        <attr name="image" format="reference"/>
+        <attr name="reflect_image" format="reference"/>
+        <attr name="reflect_size" format="dimension"/>
         <attr name="reflect_distance" format="dimension"/>
     </declare-styleable>
 </resources>

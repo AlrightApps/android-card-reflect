@@ -12,6 +12,7 @@
             android:id="@+id/card_image"
             android:layout_width="300dp"
             android:layout_height="435dp"
-            card_view:reflect_distance="8dp" />
+            card_view:reflect_size="32dp"
+            card_view:reflect_distance="2dp" />
 
 </LinearLayout>

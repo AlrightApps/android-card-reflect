@@ -7,16 +7,16 @@ import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import android.widget.LinearLayout
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
 
-class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs), CoroutineScope {
+class CardReflectView(context: Context, attrs: AttributeSet) : View(context, attrs), CoroutineScope {
 
     private val tag = "CardReflectView"
-    private var imageResource: Int = 0
+    private var reflectImageResource: Int = 0
     private var reflectDistance: Int = 0
+    private var reflectSize: Int = 0
     private var finalBitmap: Bitmap? = null
 
     override val coroutineContext: CoroutineContext =
@@ -26,111 +26,38 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         //Allows the BlurMaskFilter below to function
         setLayerType(View.LAYER_TYPE_SOFTWARE, null);
 
-        inflate(context, R.layout.card_reflect_view, this)
+        inflate(context, R.layout.card_reflect_view, null)
 
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.CardReflectView)
         reflectDistance = attributes.getDimension(R.styleable.CardReflectView_reflect_distance, 0F).toInt().px
-        imageResource = attributes.getResourceId(R.styleable.CardReflectView_image, 0)
+        reflectSize = attributes.getDimension(R.styleable.CardReflectView_reflect_size, 0F).toInt().px
+        reflectImageResource = attributes.getResourceId(R.styleable.CardReflectView_reflect_image, 0)
         attributes.recycle()
     }
 
     fun setCardImage(newImageResource: Int) {
-
-        imageResource = newImageResource
-
+        reflectImageResource = newImageResource
         invalidate()
-
-        launch {
-            withContext(Dispatchers.Default) {
-
-                /*val roundedBitmap = originalImage.drawToBitmap()
-
-                //Next we grab a copy and rotate it
-                val m = Matrix()
-                m.preScale(1f, -1f)
-                val mirrorBitmap =
-                    Bitmap.createBitmap(
-                        roundedBitmap,
-                        0,
-                        0,
-                        roundedBitmap.width,
-                        roundedBitmap.height,
-                        m,
-                        false
-                    )
-
-                //For an efficiency attempt, we chop some this bitmap down
-                val pixels = IntArray(mirrorBitmap.width * mirrorHeight)
-                mirrorBitmap.getPixels(
-                    pixels,
-                    0,
-                    mirrorBitmap.width,
-                    0,
-                    0,
-                    mirrorBitmap.width,
-                    mirrorHeight
-                )
-
-                val croppedBitmap = Bitmap.createBitmap(
-                    mirrorBitmap.width,
-                    mirrorHeight,
-                    Bitmap.Config.ARGB_8888
-                )
-
-                //For some reason, the cropped pixels need to be swizzled:
-                //https://stackoverflow.com/questions/47970384/why-is-copypixelsfrombuffer-giving-incorrect-color-setpixels-is-correct-but-slo
-                for (i in pixels.indices) {
-                    val red = Color.red(pixels[i])
-                    val green = Color.green(pixels[i])
-                    val blue = Color.blue(pixels[i])
-                    val alpha = Color.alpha(pixels[i])
-                    pixels[i] = Color.argb(alpha, blue, green, red)
-                }
-                croppedBitmap.copyPixelsFromBuffer(IntBuffer.wrap(pixels))
-
-                //Blur the cropped, mirrored bitmap
-                //https://medium.com/@ssaurel/create-a-blur-effect-on-android-with-renderscript-aa05dae0bd7d
-                val blurredBitmap = BlurBuilder.blur(context, croppedBitmap)
-
-                //Add a transparency gradient to the blurred image
-                finalBitmap = addGradient(blurredBitmap)
-
-                withContext(Dispatchers.Main) {
-                    resultImage.setImageBitmap(finalBitmap)
-
-                    //Request layout to draw these results to the screen
-                    Log.d(tag, "Requesting layout....")
-                    requestLayout()
-                }
-
-                Log.d(
-                    tag,
-                    "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!"
-                )*/
-            }
-
-        }
     }
 
     override fun dispatchDraw(canvas: Canvas?) {
         super.dispatchDraw(canvas)
 
-        if(imageResource != 0 && canvas != null){
+        if(reflectImageResource != 0 && canvas != null){
             Log.d(tag, "onDraw, drawing bitmap....")
             val startTime = System.currentTimeMillis()
 
-            val bitmap = BitmapFactory.decodeResource(resources, imageResource)
-
+            val bitmap = BitmapFactory.decodeResource(resources, reflectImageResource)
             val width = canvas.width
             val height = (canvas.height - reflectDistance)/2
-
-            val centerCropBitmap = ThumbnailUtils.extractThumbnail(bitmap, width,
-                height)
+            val centerCropBitmap = ThumbnailUtils.extractThumbnail(bitmap, width, height)
 
             drawRoundedBitmap(centerCropBitmap, canvas)
 
             val blurredBitmap = BlurBuilder.blur(context, centerCropBitmap)
             drawMirrorBitmap(blurredBitmap, canvas)
+
+            Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
         }
     }
 
@@ -156,7 +83,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         val width = canvas.width.toFloat()
         val height = ((canvas.height.toFloat())/2) + reflectDistance
 
-        val roundRect = RectF(0F, height, width, height*2)
+        val roundRect = RectF(0F, height, width, height + reflectSize)
         val mPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
         //Attempt to add transparency gradient
@@ -170,7 +97,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         positions[1] = 0.5f
         positions[2] = 1f
 
-        val shaderA = LinearGradient(0F, height, 0F, canvas.height.toFloat(), colors, positions, Shader.TileMode.CLAMP)
+        val shaderA = LinearGradient(0F, height, 0F, height + reflectSize.toFloat(), colors, positions, Shader.TileMode.CLAMP)
         val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
         val paint = Paint()
         paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
