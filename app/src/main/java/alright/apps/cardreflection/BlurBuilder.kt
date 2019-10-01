@@ -29,7 +29,6 @@ object BlurBuilder {
         intrinsicBlur.forEach(tmpOut)
         tmpOut.copyTo(outputBitmap)
 
-        val o = Bitmap.createScaledBitmap(outputBitmap, image.width, image.height, false)
-        return o
+        return Bitmap.createScaledBitmap(outputBitmap, image.width, image.height, false)
     }
 }

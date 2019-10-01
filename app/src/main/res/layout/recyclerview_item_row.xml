@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
         xmlns:card_view="http://schemas.android.com/apk/res-auto"
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_horizontal"
-        android:orientation="vertical">
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
 
     <alright.apps.cardreflection.CardReflectView
             android:id="@+id/card_image"
-            android:layout_width="300dp"
-            android:layout_height="435dp"
-            card_view:reflect_size="32dp"
-            card_view:reflect_distance="2dp" />
+            android:layout_width="match_parent"
+            android:layout_height="300dp"
+            card_view:reflect_size="16dp"
+            card_view:reflect_distance="0dp"
+            card_view:reflect_corner_radius="6dp"/>
 
-</LinearLayout>
+</FrameLayout>
