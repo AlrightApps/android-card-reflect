@@ -161,8 +161,8 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
 
         //Attempt to add transparency gradient
         val colors = IntArray(3)
-        colors[0] = Color.argb(255, 0, 0, 0)
-        colors[1] = Color.argb(127, 0, 0, 0)
+        colors[0] = Color.argb(127, 0, 0, 0)
+        colors[1] = Color.argb(63, 0, 0, 0)
         colors[2] = Color.argb(0, 0, 0, 0)
 
         val positions = FloatArray(3)
@@ -170,7 +170,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         positions[1] = 0.5f
         positions[2] = 1f
 
-        val shaderA = LinearGradient(0F, 0F, 0F, height*2, colors, positions, Shader.TileMode.CLAMP)
+        val shaderA = LinearGradient(0F, height, 0F, canvas.height.toFloat(), colors, positions, Shader.TileMode.CLAMP)
         val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
         val paint = Paint()
         paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
