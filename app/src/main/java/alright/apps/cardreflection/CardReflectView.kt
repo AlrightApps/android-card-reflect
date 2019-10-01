@@ -6,50 +6,32 @@ import android.graphics.*
 import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
+import android.view.View
 import android.widget.LinearLayout
-import androidx.core.graphics.drawable.RoundedBitmapDrawable
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffXfermode
-import android.graphics.RectF
-import android.graphics.Bitmap
-import android.graphics.Shader
-import android.graphics.BitmapShader
-import android.graphics.ComposeShader
-import android.R.attr.bitmap
-import android.opengl.ETC1.getWidth
-import android.graphics.LinearGradient
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
-import android.view.View
 
 
 class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(context, attrs), CoroutineScope {
 
     private val tag = "CardReflectView"
     private var imageResource: Int = 0
-    private var mirrorHeight: Int = 0
+    private var reflectDistance: Int = 0
     private var finalBitmap: Bitmap? = null
 
     override val coroutineContext: CoroutineContext =
         Dispatchers.Main + SupervisorJob()
 
     init {
+        //Allows the BlurMaskFilter below to function
+        setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+
         inflate(context, R.layout.card_reflect_view, this)
 
-        this.isDrawingCacheEnabled = true
-
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.CardReflectView)
-        mirrorHeight =
-            attributes.getDimension(R.styleable.CardReflectView_mirror_height, 0F).toInt().px
+        reflectDistance = attributes.getDimension(R.styleable.CardReflectView_reflect_distance, 0F).toInt().px
         imageResource = attributes.getResourceId(R.styleable.CardReflectView_image, 0)
         attributes.recycle()
-    }
-
-    fun get(): Bitmap {
-        return this.drawingCache
     }
 
     fun setCardImage(newImageResource: Int) {
@@ -138,21 +120,30 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
             val startTime = System.currentTimeMillis()
 
             val bitmap = BitmapFactory.decodeResource(resources, imageResource)
-            val centerCropBitmap = ThumbnailUtils.extractThumbnail(bitmap, 500, 500)
+
+            val width = canvas.width
+            val height = (canvas.height - reflectDistance)/2
+
+            val centerCropBitmap = ThumbnailUtils.extractThumbnail(bitmap, width,
+                height)
+
             drawRoundedBitmap(centerCropBitmap, canvas)
 
-            drawMirrorBitmap(centerCropBitmap, canvas)
-
+            val blurredBitmap = BlurBuilder.blur(context, centerCropBitmap)
+            drawMirrorBitmap(blurredBitmap, canvas)
         }
     }
 
     private fun drawRoundedBitmap(bitmap: Bitmap, canvas: Canvas){
 
-        val roundRect = RectF(0F, 0F, 500F, 500F)
+        val width = canvas.width.toFloat()
+        val height = (canvas.height.toFloat() - reflectDistance)/2
+
+        val roundRect = RectF(0F, 0F, width, height)
         val mPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-        mPaint.style = Paint.Style.FILL
-        canvas.drawRoundRect(roundRect, 20F, 20F, mPaint)
+        //mPaint.style = Paint.Style.FILL
+        //canvas.drawRoundRect(roundRect, 20F, 20F, mPaint)
 
         val shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
         mPaint.shader = shader
@@ -162,46 +153,29 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
 
     private fun drawMirrorBitmap(bitmap: Bitmap, canvas: Canvas){
 
-        val roundRect = RectF(0F, 500F, 500F, 1000F)
+        val width = canvas.width.toFloat()
+        val height = ((canvas.height.toFloat())/2) + reflectDistance
+
+        val roundRect = RectF(0F, height, width, height*2)
         val mPaint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-        mPaint.style = Paint.Style.FILL
-        //canvas.drawRoundRect(roundRect, 20F, 20F, mPaint)
-        val corners = floatArrayOf(
-            20f, 20f,   // Top left radius in px
-            20f, 20f,   // Top right radius in px
-            0f, 0f,     // Bottom right radius in px
-            0f, 0f      // Bottom left radius in px
-        )
-
-        var path = Path()
-        path.addRoundRect(roundRect, corners, Path.Direction.CW)
-        canvas.drawPath(path, mPaint)
-
-        val blurredBitmap = BlurBuilder.blur(context, bitmap)
-
-        val shader = BitmapShader(blurredBitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
-        mPaint.shader = shader
-        path = Path()
-        path.addRoundRect(roundRect, corners, Path.Direction.CW)
-        canvas.drawPath(path, mPaint)
-
         //Attempt to add transparency gradient
-/*        val colors = IntArray(3)
-        colors[0] = 0x50FFFFFF
-        colors[1] = 0x20FFFFFF
-        colors[2] = 0x00FFFFFF
+        val colors = IntArray(3)
+        colors[0] = Color.argb(255, 0, 0, 0)
+        colors[1] = Color.argb(127, 0, 0, 0)
+        colors[2] = Color.argb(0, 0, 0, 0)
 
         val positions = FloatArray(3)
         positions[0] = 0f
         positions[1] = 0.5f
         positions[2] = 1f
 
-        val shaderA = LinearGradient(0F, 0F, 500F, 0F, colors, positions, Shader.TileMode.MIRROR)
-        val shaderB = BitmapShader(blurredBitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
+        val shaderA = LinearGradient(0F, 0F, 0F, height*2, colors, positions, Shader.TileMode.CLAMP)
+        val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
         val paint = Paint()
         paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
-        canvas.drawRect(roundRect, paint)*/
+        //paint.maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.NORMAL)
+        canvas.drawRoundRect(roundRect, 20f, 20f, paint)
 
         mPaint.shader = null
     }
@@ -210,12 +184,4 @@ class CardReflectView(context: Context, attrs: AttributeSet) : LinearLayout(cont
         get() = (this / Resources.getSystem().displayMetrics.density).toInt()
     val Int.px: Int
         get() = (this * Resources.getSystem().displayMetrics.density).toInt()
-
-    private fun addGradient(src: Bitmap, canvas: Canvas) {
-        val shaderA = LinearGradient(0F, 0F, 500F, 0F, 0x50FFFFFF, 0x00ffffff, Shader.TileMode.CLAMP)
-        val shaderB = BitmapShader(src, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-        val paint = Paint()
-        paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
-        canvas.drawRect(0F, 0F, 500F, 500F, paint)
-    }
 }

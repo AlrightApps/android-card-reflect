@@ -3,6 +3,6 @@
 
     <declare-styleable name="CardReflectView">
         <attr name="image" format="reference"/>
-        <attr name="mirror_height" format="dimension"/>
+        <attr name="reflect_distance" format="dimension"/>
     </declare-styleable>
 </resources>

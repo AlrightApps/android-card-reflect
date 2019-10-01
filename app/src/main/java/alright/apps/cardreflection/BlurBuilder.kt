@@ -2,7 +2,6 @@ package alright.apps.cardreflection
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Matrix
 import androidx.renderscript.Allocation
 import androidx.renderscript.Element
 import androidx.renderscript.RenderScript
@@ -11,12 +10,13 @@ import kotlin.math.roundToInt
 
 
 object BlurBuilder {
-    private const val BITMAP_SCALE = 1f
-    private const val BLUR_RADIUS = 25f
+    private const val BITMAP_SCALE = 0.5f
+    private const val BLUR_RADIUS = 8f
 
     fun blur(context: Context, image: Bitmap): Bitmap {
         val width = (image.width * BITMAP_SCALE).roundToInt()
         val height = (image.height * BITMAP_SCALE).roundToInt()
+
         val inputBitmap = Bitmap.createScaledBitmap(image, width, height, false)
 
         val outputBitmap = Bitmap.createBitmap(inputBitmap)
@@ -29,6 +29,7 @@ object BlurBuilder {
         intrinsicBlur.forEach(tmpOut)
         tmpOut.copyTo(outputBitmap)
 
-        return outputBitmap
+        val o = Bitmap.createScaledBitmap(outputBitmap, image.width, image.height, false)
+        return o
     }
 }
