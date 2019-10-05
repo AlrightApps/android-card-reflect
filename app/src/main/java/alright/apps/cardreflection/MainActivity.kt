@@ -36,7 +36,7 @@ import java.util.ArrayList
 
 class MainActivity : AppCompatActivity() {
 
-    private var photosList: ArrayList<Photo> = ArrayList()
+    private var photosList: ArrayList<Int> = ArrayList()
     private lateinit var linearLayoutManager: LinearLayoutManager
     private lateinit var adapter: RecyclerAdapter
 
@@ -46,7 +46,29 @@ class MainActivity : AppCompatActivity() {
         linearLayoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         recycler_view.layoutManager = linearLayoutManager
 
-        photosList.addAll(listOf(Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo(), Photo()))
+        photosList.addAll(
+            listOf(
+                R.drawable.nasa_1,
+                R.drawable.nasa_2,
+                R.drawable.nasa_3,
+                R.drawable.nasa_4,
+                R.drawable.nasa_5,
+                R.drawable.nasa_6,
+                R.drawable.nasa_7,
+                R.drawable.nasa_8,
+                R.drawable.nasa_9,
+                R.drawable.nasa_10,
+                R.drawable.nasa_11,
+                R.drawable.nasa_12,
+                R.drawable.random_13,
+                R.drawable.random_14,
+                R.drawable.random_15,
+                R.drawable.random_16,
+                R.drawable.random_17,
+                R.drawable.random_18
+            )
+        )
+        photosList.shuffle()
         adapter = RecyclerAdapter(photosList)
         recycler_view.adapter = adapter
     }
