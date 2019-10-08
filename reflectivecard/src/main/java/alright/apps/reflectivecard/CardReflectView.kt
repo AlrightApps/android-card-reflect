@@ -1,4 +1,4 @@
-package alright.apps.cardreflection
+package alright.apps.reflectivecard
 
 import android.content.Context
 import android.graphics.*
@@ -58,13 +58,14 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
             Log.d(tag, "onDraw, drawing bitmap....")
             val startTime = System.currentTimeMillis()
 
-            val width = canvas.width - (reflectSidePadding*2)
-            val height = canvas.height - reflectDistance - reflectSize
-            val centerCroppedBitmap = ThumbnailUtils.extractThumbnail(image, width.toInt(), height.toInt())
+            val width = canvas.width
+            val height = canvas.height
+            val centerCroppedBitmap = ThumbnailUtils.extractThumbnail(image, width, height)
 
             drawCardBitmap(centerCroppedBitmap, canvas)
             //Take care not to blur the image too much, as a BlurMaskFilter is also applied to give the edges some fuzziness
-            val blurredBitmap = BlurBuilder.blur(context, centerCroppedBitmap)
+            val blurredBitmap =
+                BlurBuilder.blur(context, centerCroppedBitmap)
             drawReflectionBitmap(blurredBitmap, canvas)
 
             Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")

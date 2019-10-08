@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package alright.apps.cardreflection
+package alright.apps.reflectivecard
 
 import android.view.LayoutInflater
 import android.view.View

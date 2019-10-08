@@ -1,4 +1,4 @@
-package alright.apps.cardreflection
+package alright.apps.reflectivecard
 
 import org.junit.Test
 

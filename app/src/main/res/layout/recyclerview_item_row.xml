@@ -9,7 +9,7 @@
         android:paddingTop="16dp"
         android:paddingBottom="16dp">
 
-    <alright.apps.cardreflection.CardReflectView
+    <alright.apps.reflectivecard.CardReflectView
             android:id="@+id/card_image"
             android:layout_width="match_parent"
             android:layout_height="300dp"

@@ -20,18 +20,13 @@
  * THE SOFTWARE.
  */
 
-package alright.apps.cardreflection
+package alright.apps.reflectivecard
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.activity_main.*
-import java.io.IOException
-import java.util.ArrayList
+import java.util.*
 
 
 class MainActivity : AppCompatActivity() {
