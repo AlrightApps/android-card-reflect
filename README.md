@@ -44,6 +44,7 @@ view.card_image.setCardImage(R.drawable.myImage)
 
 
 #### Problems / desired features:
- - Right now each view takes about 40 - 50 ms to render on my Gen 1 Razer phone. This is obviously a little too long, so any optimization suggestions are welcome! (this is my first time making a custom view!)
+ - Right now each view takes about **40-50** ms to render on my Gen 1 Razer phone. This is obviously a little too long, so any optimization suggestions are welcome! (this is my first time making a custom view!)
  - The `setCardImage` function uses a drawable resource. Passing in a dynamic bitmap here should be easy, I just haven't implemented it yet.
  - More attribute properties could be added. In particular blurriness, or the shape of the view (it doesn't really need to be a roundrect).
+ - There is no sanitization of the attributes, the `reflect_size` + `reflect_elevation` for example should never exceed the height of the view
