@@ -42,6 +42,17 @@ view.card_image.setCardImage(R.drawable.myImage)
 - `reflect_corner_radius` is the corner radius of the card and the reflection
 - `reflect_image_side_padding` is the padding on at the start and end of the card. This allows the reflection sides to be "fuzzy"
 
+The project is hosted on Jitpack:
+```
+allprojects {
+ repositories {
+    ...
+    maven { url 'https://jitpack.io' }
+ }
+}
+```
+`implementation 'com.github.AlrightApps:android-card-reflect:0.1'`
+
 
 #### Problems / desired features:
  - Right now each view takes about **40-50** ms to render on my Gen 1 Razer phone. This is obviously a little too long, so any optimization suggestions are welcome! (this is my first time making a custom view!)
