@@ -6,6 +6,7 @@ import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import kotlin.math.absoluteValue
 
 
 class CardReflectView(context: Context, attrs: AttributeSet) : View(context, attrs) {
@@ -64,8 +65,13 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
             drawCardBitmap(centerCroppedBitmap, canvas)
             //Take care not to blur the image too much, as a BlurMaskFilter is also applied to give the edges some fuzziness
+
+            val matrix = Matrix()
+            matrix.setScale(1f, -1f)
+            val mirroredBitmap = Bitmap.createBitmap(centerCroppedBitmap, 0, (height - (reflectElevation - reflectSize - reflectSize).absoluteValue).toInt(), width, reflectSize.toInt(), matrix, false)
+
             val blurredBitmap =
-                BlurBuilder.blur(context, centerCroppedBitmap)
+                BlurBuilder.blur(context, mirroredBitmap)
             drawReflectionBitmap(blurredBitmap, canvas)
 
             Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
