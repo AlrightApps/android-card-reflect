@@ -12,14 +12,14 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
     private val tag = "CardReflectView"
     private var reflectImageResource: Int = 0
-    private var reflectDistance = 0f
+    private var reflectElevation = 0f
     private var reflectSize = 0f
     private var reflectSidePadding = 0f
     private var reflectCornerRadius = 0f
     private var image: Bitmap? = null
 
-    private var gradientColors: IntArray
-    private var gradientPositions: FloatArray
+    private var transparencyLevels: IntArray
+    private var transparencyPositions: FloatArray
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val blurMaskFilter = BlurMaskFilter(32f, BlurMaskFilter.Blur.NORMAL)
@@ -30,19 +30,19 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.CardReflectView)
         reflectImageResource = attributes.getResourceId(R.styleable.CardReflectView_reflect_image, 0)
-        reflectDistance = attributes.getDimension(R.styleable.CardReflectView_reflect_distance, 0f)
+        reflectCornerRadius = attributes.getDimension(R.styleable.CardReflectView_reflect_corner_radius, 0F)
+        reflectElevation = attributes.getDimension(R.styleable.CardReflectView_reflect_elevation, 0f)
         reflectSize = attributes.getDimension(R.styleable.CardReflectView_reflect_size, 0f)
         reflectSidePadding = attributes.getDimension(R.styleable.CardReflectView_reflect_image_side_padding, 0f)
-        reflectCornerRadius = attributes.getDimension(R.styleable.CardReflectView_reflect_corner_radius, 0F)
         attributes.recycle()
 
-        gradientColors = IntArray(2)
-        gradientColors[0] = Color.argb(127, 0, 0, 0)
-        gradientColors[1] = Color.argb(0, 0, 0, 0)
+        transparencyLevels = IntArray(2)
+        transparencyLevels[0] = Color.argb(127, 0, 0, 0)
+        transparencyLevels[1] = Color.argb(0, 0, 0, 0)
 
-        gradientPositions = FloatArray(2)
-        gradientPositions[0] = 0f
-        gradientPositions[1] = 1f
+        transparencyPositions = FloatArray(2)
+        transparencyPositions[0] = 0f
+        transparencyPositions[1] = 1f
     }
 
     fun setCardImage(newImageResource: Int) {
@@ -75,7 +75,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
     private fun drawCardBitmap(bitmap: Bitmap, canvas: Canvas){
 
         val width = canvas.width.toFloat()
-        val height = canvas.height.toFloat() - reflectDistance - reflectSize
+        val height = canvas.height.toFloat() - reflectElevation - reflectSize
 
         val roundRect = RectF(reflectSidePadding, 0F, width - reflectSidePadding, height)
 
@@ -90,7 +90,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
 
-        val shaderA = LinearGradient(0F, height - reflectSize, 0F, height, gradientColors, gradientPositions, Shader.TileMode.CLAMP)
+        val shaderA = LinearGradient(0F, height - reflectSize, 0F, height, transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
         val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
         paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
         paint.maskFilter = blurMaskFilter
