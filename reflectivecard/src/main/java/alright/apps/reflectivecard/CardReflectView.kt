@@ -6,6 +6,7 @@ import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
+import androidx.core.graphics.toRect
 import kotlin.math.absoluteValue
 
 
@@ -64,15 +65,13 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
             val centerCroppedBitmap = ThumbnailUtils.extractThumbnail(image, width, height)
 
             drawCardBitmap(centerCroppedBitmap, canvas)
-            //Take care not to blur the image too much, as a BlurMaskFilter is also applied to give the edges some fuzziness
 
             val matrix = Matrix()
             matrix.setScale(1f, -1f)
             val mirroredBitmap = Bitmap.createBitmap(centerCroppedBitmap, 0, (height - (reflectElevation - reflectSize - reflectSize).absoluteValue).toInt(), width, reflectSize.toInt(), matrix, false)
 
-            val blurredBitmap =
-                BlurBuilder.blur(context, mirroredBitmap)
-            drawReflectionBitmap(blurredBitmap, canvas)
+            val blurredBitmap = BlurBuilder.blur(context, mirroredBitmap)
+            drawReflectionBitmap(mirroredBitmap, canvas)
 
             Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
         }
@@ -96,15 +95,21 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
 
-        val shaderA = LinearGradient(0F, height - reflectSize, 0F, height, transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
-        val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
-        paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
-        paint.maskFilter = blurMaskFilter
+       // val shaderA = LinearGradient(0F, 0F, 0F, reflectSize, transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
+       // val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
+       // paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
+        //paint.maskFilter = blurMaskFilter
 
-        val rect = RectF(reflectSidePadding, height - reflectSize, width - reflectSidePadding, height)
-        canvas.drawRoundRect(rect, reflectCornerRadius, reflectCornerRadius, paint)
+        val shader = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
+        paint.shader = shader
+
+        val sourceRect = RectF(reflectSidePadding, 0f, width - reflectSidePadding, bitmap.height.toFloat())
+        val destinationRect = RectF(reflectSidePadding, height - bitmap.height.toFloat(), width - reflectSidePadding, height)
+        canvas.drawRoundRect(destinationRect, reflectCornerRadius, reflectCornerRadius, paint)
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        canvas.drawBitmap(bitmap, sourceRect.toRect(), destinationRect.toRect(), paint)
 
         paint.shader = null
-        paint.maskFilter = null
+        //paint.maskFilter = null
     }
 }
