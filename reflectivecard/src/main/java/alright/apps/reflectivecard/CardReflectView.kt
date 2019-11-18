@@ -69,8 +69,6 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
             val matrix = Matrix()
             matrix.setScale(1f, -1f)
             val mirroredBitmap = Bitmap.createBitmap(centerCroppedBitmap, 0, (height - (reflectElevation - reflectSize - reflectSize).absoluteValue).toInt(), width, reflectSize.toInt(), matrix, false)
-
-            val blurredBitmap = BlurBuilder.blur(context, mirroredBitmap)
             drawReflectionBitmap(mirroredBitmap, canvas)
 
             Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
@@ -95,19 +93,28 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
 
-       // val shaderA = LinearGradient(0F, 0F, 0F, reflectSize, transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
-       // val shaderB = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
-       // paint.shader = ComposeShader(shaderA, shaderB, PorterDuff.Mode.SRC_IN)
-        //paint.maskFilter = blurMaskFilter
-
-        val shader = BitmapShader(bitmap, Shader.TileMode.MIRROR, Shader.TileMode.MIRROR)
-        paint.shader = shader
-
         val sourceRect = RectF(reflectSidePadding, 0f, width - reflectSidePadding, bitmap.height.toFloat())
         val destinationRect = RectF(reflectSidePadding, height - bitmap.height.toFloat(), width - reflectSidePadding, height)
-        canvas.drawRoundRect(destinationRect, reflectCornerRadius, reflectCornerRadius, paint)
-        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-        canvas.drawBitmap(bitmap, sourceRect.toRect(), destinationRect.toRect(), paint)
+
+        //Attempt to get roundRect bitmap separately
+        val roundRect = RectF(reflectSidePadding, reflectSidePadding, width - reflectSidePadding, bitmap.height.toFloat())
+        val roundRectBitmap = Bitmap.createBitmap(width.toInt(), bitmap.height + (reflectSidePadding).toInt(), Bitmap.Config.ARGB_8888)
+        val roundRectPaint = Paint()
+        val roundRectCanvas = Canvas(roundRectBitmap)
+        roundRectPaint.isAntiAlias = true
+        roundRectPaint.color = Color.BLACK
+        roundRectPaint.style = Paint.Style.FILL
+        roundRectCanvas.drawARGB(0, 0, 0, 0)
+        roundRectCanvas.drawRoundRect(roundRect, reflectCornerRadius, reflectCornerRadius, roundRectPaint)
+
+        roundRectPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
+        roundRectCanvas.drawBitmap(bitmap, sourceRect.toRect(), roundRect.toRect(), roundRectPaint)
+
+        val blurred = BlurBuilder.blur(context, roundRectBitmap)
+        val blurredRect = Rect(0, 0, blurred.width, blurred.height)
+        val blurredDestRect = Rect(0, height.toInt() - bitmap.height, width.toInt(), height.toInt())
+
+        canvas.drawBitmap(blurred, blurredRect, blurredDestRect, paint)
 
         paint.shader = null
         //paint.maskFilter = null
