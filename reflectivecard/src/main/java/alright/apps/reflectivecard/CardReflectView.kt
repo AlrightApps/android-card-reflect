@@ -27,8 +27,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
     private val blurMaskFilter = BlurMaskFilter(32f, BlurMaskFilter.Blur.NORMAL)
 
     init {
-        //Allows the BlurMaskFilter below to function
-        setLayerType(LAYER_TYPE_SOFTWARE, null)
+        setLayerType(LAYER_TYPE_HARDWARE, null)
 
         val attributes = context.obtainStyledAttributes(attrs, R.styleable.CardReflectView)
         reflectImageResource = attributes.getResourceId(R.styleable.CardReflectView_reflect_image, 0)
@@ -93,22 +92,22 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
 
-        val sourceRect = RectF(reflectSidePadding, 0f, width - reflectSidePadding, bitmap.height.toFloat())
-        val destinationRect = RectF(reflectSidePadding, height - bitmap.height.toFloat(), width - reflectSidePadding, height)
-
         //Attempt to get roundRect bitmap separately
-        val roundRect = RectF(reflectSidePadding, reflectSidePadding, width - reflectSidePadding, bitmap.height.toFloat())
-        val roundRectBitmap = Bitmap.createBitmap(width.toInt(), bitmap.height + (reflectSidePadding).toInt(), Bitmap.Config.ARGB_8888)
+        val roundRect = RectF(reflectSidePadding, reflectSidePadding, bitmap.width - reflectSidePadding, bitmap.height - reflectSidePadding)
+        val roundRectBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
         val roundRectPaint = Paint()
         val roundRectCanvas = Canvas(roundRectBitmap)
+
         roundRectPaint.isAntiAlias = true
         roundRectPaint.color = Color.BLACK
         roundRectPaint.style = Paint.Style.FILL
+
         roundRectCanvas.drawARGB(0, 0, 0, 0)
         roundRectCanvas.drawRoundRect(roundRect, reflectCornerRadius, reflectCornerRadius, roundRectPaint)
 
         roundRectPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
-        roundRectCanvas.drawBitmap(bitmap, sourceRect.toRect(), roundRect.toRect(), roundRectPaint)
+
+        roundRectCanvas.drawBitmap(bitmap, 0F, 0F, roundRectPaint)
 
         val blurred = BlurBuilder.blur(context, roundRectBitmap)
         val blurredRect = Rect(0, 0, blurred.width, blurred.height)
