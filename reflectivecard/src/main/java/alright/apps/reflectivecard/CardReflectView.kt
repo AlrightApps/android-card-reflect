@@ -2,11 +2,11 @@ package alright.apps.reflectivecard
 
 import android.content.Context
 import android.graphics.*
+import android.graphics.Shader.TileMode
 import android.media.ThumbnailUtils
 import android.util.AttributeSet
 import android.util.Log
 import android.view.View
-import androidx.core.graphics.toRect
 import kotlin.math.absoluteValue
 
 
@@ -37,13 +37,15 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         reflectSidePadding = attributes.getDimension(R.styleable.CardReflectView_reflect_image_side_padding, 0f)
         attributes.recycle()
 
-        transparencyLevels = IntArray(2)
-        transparencyLevels[0] = Color.argb(127, 0, 0, 0)
-        transparencyLevels[1] = Color.argb(0, 0, 0, 0)
+        transparencyLevels = IntArray(3)
+        transparencyLevels[0] = Color.argb(200, 0, 0, 0)
+        transparencyLevels[1] = Color.argb(75, 0, 0, 0)
+        transparencyLevels[2] = Color.argb(0, 0, 0, 0)
 
-        transparencyPositions = FloatArray(2)
+        transparencyPositions = FloatArray(3)
         transparencyPositions[0] = 0f
-        transparencyPositions[1] = 1f
+        transparencyPositions[1] = 0.3f
+        transparencyPositions[2] = 1f
     }
 
     fun setCardImage(newImageResource: Int) {
@@ -107,7 +109,9 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
         roundRectPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.SRC_IN)
 
-        roundRectCanvas.drawBitmap(bitmap, 0F, 0F, roundRectPaint)
+        val gradientized = addGradient(bitmap)
+
+        roundRectCanvas.drawBitmap(gradientized, 0F, 0F, roundRectPaint)
 
         val blurred = BlurBuilder.blur(context, roundRectBitmap)
         val blurredRect = Rect(0, 0, blurred.width, blurred.height)
@@ -117,5 +121,19 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
         paint.shader = null
         //paint.maskFilter = null
+    }
+
+    fun addGradient(src: Bitmap): Bitmap {
+        val w = src.width
+        val h = src.height
+        val overlay = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(overlay)
+        canvas.drawBitmap(src, 0F, 0F, null)
+        val paint = Paint()
+        val shader = LinearGradient(0F, 0F, 0F, h.toFloat(), transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
+        paint.shader = shader
+        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        canvas.drawRect(0F, 0F, w.toFloat(), h.toFloat(), paint)
+        return overlay
     }
 }
