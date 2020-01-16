@@ -24,7 +24,6 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
     private var transparencyPositions: FloatArray
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val blurMaskFilter = BlurMaskFilter(32f, BlurMaskFilter.Blur.NORMAL)
 
     init {
         setLayerType(LAYER_TYPE_HARDWARE, null)
@@ -62,14 +61,14 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
             val startTime = System.currentTimeMillis()
 
             val width = canvas.width
-            val height = canvas.height
+            val height = canvas.height - reflectSize.toInt()
             val centerCroppedBitmap = ThumbnailUtils.extractThumbnail(image, width, height)
 
             drawCardBitmap(centerCroppedBitmap, canvas)
 
             val matrix = Matrix()
             matrix.setScale(1f, -1f)
-            val mirroredBitmap = Bitmap.createBitmap(centerCroppedBitmap, 0, (height - (reflectElevation - reflectSize - reflectSize).absoluteValue).toInt(), width, reflectSize.toInt(), matrix, false)
+            val mirroredBitmap = Bitmap.createBitmap(centerCroppedBitmap, 0, (height - reflectSize.toInt()), width, reflectSize.toInt(), matrix, false)
             drawReflectionBitmap(mirroredBitmap, canvas)
 
             Log.d(tag, "Transformation took: " + (System.currentTimeMillis() - startTime) + " millis to complete!")
@@ -79,11 +78,11 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
     private fun drawCardBitmap(bitmap: Bitmap, canvas: Canvas){
 
         val width = canvas.width.toFloat()
-        val height = canvas.height.toFloat() - reflectElevation - reflectSize
+        val height = canvas.height.toFloat() - reflectSize
 
         val roundRect = RectF(reflectSidePadding, 0F, width - reflectSidePadding, height)
 
-        val shader = BitmapShader(bitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        val shader = BitmapShader(bitmap, TileMode.CLAMP, TileMode.CLAMP)
         paint.shader = shader
         canvas.drawRoundRect(roundRect, reflectCornerRadius, reflectCornerRadius, paint)
         paint.shader = null
@@ -94,13 +93,11 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val width = canvas.width.toFloat()
         val height = canvas.height.toFloat()
 
-        //Attempt to get roundRect bitmap separately
-        val roundRect = RectF(reflectSidePadding, reflectSidePadding, bitmap.width - reflectSidePadding, bitmap.height - reflectSidePadding)
+        val roundRect = RectF(reflectSidePadding, 0F, bitmap.width - reflectSidePadding, bitmap.height.toFloat())
         val roundRectBitmap = Bitmap.createBitmap(bitmap.width, bitmap.height, Bitmap.Config.ARGB_8888)
-        val roundRectPaint = Paint()
+        val roundRectPaint = Paint(Paint.ANTI_ALIAS_FLAG)
         val roundRectCanvas = Canvas(roundRectBitmap)
 
-        roundRectPaint.isAntiAlias = true
         roundRectPaint.color = Color.BLACK
         roundRectPaint.style = Paint.Style.FILL
 
@@ -113,7 +110,7 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
 
         roundRectCanvas.drawBitmap(gradientized, 0F, 0F, roundRectPaint)
 
-        val blurred = BlurBuilder.blur(context, roundRectBitmap)
+        val blurred = roundRectBitmap //BlurBuilder.blur(context, roundRectBitmap)
         val blurredRect = Rect(0, 0, blurred.width, blurred.height)
         val blurredDestRect = Rect(0, height.toInt() - bitmap.height, width.toInt(), height.toInt())
 
@@ -129,11 +126,13 @@ class CardReflectView(context: Context, attrs: AttributeSet) : View(context, att
         val overlay = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(overlay)
         canvas.drawBitmap(src, 0F, 0F, null)
-        val paint = Paint()
-        val shader = LinearGradient(0F, 0F, 0F, h.toFloat(), transparencyLevels, transparencyPositions, Shader.TileMode.CLAMP)
-        paint.shader = shader
-        paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
-        canvas.drawRect(0F, 0F, w.toFloat(), h.toFloat(), paint)
+
+        //val paint = Paint()
+        //val shader = LinearGradient(0F, 0F, 0F, h.toFloat(), transparencyLevels, transparencyPositions, TileMode.CLAMP)
+        //paint.shader = shader
+        //paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        //canvas.drawRect(0F, 0F, w.toFloat(), h.toFloat(), paint)
+
         return overlay
     }
 }
