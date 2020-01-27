@@ -20,8 +20,9 @@
  * THE SOFTWARE.
  */
 
-package alright.apps.reflectivecard
+package alright.apps.reflectivesample
 
+import alright.apps.reflectivesample.R
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
