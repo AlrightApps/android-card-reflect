@@ -13,9 +13,8 @@
             android:id="@+id/card_image"
             android:layout_width="match_parent"
             android:layout_height="300dp"
-            card_view:reflect_size="90dp"
-            card_view:reflect_elevation="0dp"
+            card_view:reflect_size="60dp"
             card_view:reflect_corner_radius="16dp"
-            card_view:reflect_image_side_padding="16dp"/>
+            card_view:reflect_blur_radius="4dp"/>
 
 </FrameLayout>

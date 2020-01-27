@@ -5,7 +5,6 @@
         <attr name="reflect_image" format="reference"/>
         <attr name="reflect_corner_radius" format="dimension"/>
         <attr name="reflect_size" format="dimension"/>
-        <attr name="reflect_image_side_padding" format="dimension"/>
-        <attr name="reflect_elevation" format="dimension"/>
+        <attr name="reflect_blur_radius" format="dimension"/>
     </declare-styleable>
 </resources>
